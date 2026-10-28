@@ -1,0 +1,33 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found">
+  <main class="lost">
+    <p class="quiet">nothing down here.<span class="caret" aria-hidden="true"></span></p>
+    <h1>This page doesn't exist.</h1>
+    <p><a class="ink-link" href="/">Back to the ocean</a></p>
+  </main>
+</Base>
+
+<style>
+  .lost {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+    min-height: 100dvh;
+    padding: 0 var(--rail);
+  }
+
+  .quiet {
+    font-size: 13px;
+    opacity: 0.6;
+  }
+
+  h1 {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 500;
+  }
+</style>

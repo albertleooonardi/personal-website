@@ -1,0 +1,48 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import { site } from '../data/site';
+import PageMotion from '../components/PageMotion.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Fixed, non-scrolling page (the ocean). */
+  still?: boolean;
+}
+
+const { title, description = site.description, still = false } = Astro.props;
+const pageTitle = title ? `${title} / ${site.name}` : site.name;
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark" class:list={{ still }}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta name="theme-color" content="#070c12" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <PageMotion />
+  </head>
+  <body>
+    <Nav />
+    <div id="page-content"><slot /></div>
+    <script>
+      import '../scripts/motion';
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  html.still,
+  html.still body {
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+</style>

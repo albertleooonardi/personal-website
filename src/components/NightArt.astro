@@ -1,0 +1,52 @@
+---
+// An image slot: the real image when there is one, otherwise a generated
+// night-garden illustration from the seed.
+import { nightArt, type Variant } from '../lib/art';
+
+interface Props {
+  seed: number;
+  src?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  variant?: Variant;
+  label?: string;
+  class?: string;
+  eager?: boolean;
+}
+
+const { seed, src, alt = '', width = 1200, height = 800, variant, label, class: className, eager } = Astro.props;
+---
+
+{
+  src ? (
+    <img
+      class:list={['art', className]}
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+  ) : (
+    <span
+      class:list={['art', className]}
+      set:html={nightArt({ seed, width, height, variant, label, alt: alt || undefined })}
+    />
+  )
+}
+
+<style>
+  .art {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .art :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+</style>

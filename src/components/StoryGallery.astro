@@ -1,0 +1,311 @@
+---
+// A row of screenshots where the one you point at opens wide and the rest
+// fold into labelled slivers. On small screens the shots simply stack.
+import NightArt from './NightArt.astro';
+import type { Shot } from '../data/projects';
+
+interface Props {
+  title: string;
+  shots: Shot[];
+  start?: number;
+}
+
+const { title, shots, start = 0 } = Astro.props;
+const initial = Math.max(0, Math.min(shots.length - 1, start));
+---
+
+<section class="gallery" aria-label={title} data-story-gallery data-start={initial}>
+  <div class="head">
+    <span>{title.toLowerCase()}</span>
+    <span class="count"><span data-count>{initial + 1}</span> / {shots.length}</span>
+  </div>
+
+  <div class="row">
+    {
+      shots.map((shot, i) => (
+        <button
+          type="button"
+          class="shot"
+          aria-label={shot.title}
+          aria-pressed={i === initial ? 'true' : 'false'}
+          data-shot={i}
+          data-title={shot.title}
+          data-caption={shot.caption}
+        >
+          <NightArt seed={shot.art ?? i + 1} src={shot.src} alt={shot.alt} variant={shot.variant} width={1600} height={900} />
+          <span class="active-label">
+            <span class="bar" />
+            {shot.title.toLowerCase()}
+          </span>
+          <span class="sliver-label" aria-hidden="true">
+            <span>{shot.title.toLowerCase()}</span>
+          </span>
+        </button>
+      ))
+    }
+  </div>
+  <p class="caption" aria-live="polite">
+    <span class="caption-title" data-cap-title>{shots[initial].title}.</span>{' '}<span
+      class="caption-text"
+      data-cap-text>{shots[initial].caption}</span
+    >
+  </p>
+
+  <div class="stack">
+    {
+      shots.map((shot, i) => (
+        <figure>
+          <span class="frame">
+            <NightArt seed={shot.art ?? i + 1} src={shot.src} alt={shot.alt} variant={shot.variant} width={1600} height={900} />
+          </span>
+          <figcaption>
+            <span class="caption-title">{shot.title}.</span>{' '}<span class="caption-text">{shot.caption}</span>
+          </figcaption>
+        </figure>
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  for (const gallery of document.querySelectorAll<HTMLElement>('[data-story-gallery]')) {
+    const shots = Array.from(gallery.querySelectorAll<HTMLButtonElement>('[data-shot]'));
+    const count = gallery.querySelector('[data-count]');
+    const capTitle = gallery.querySelector('[data-cap-title]');
+    const capText = gallery.querySelector('[data-cap-text]');
+    let active = Number(gallery.dataset.start ?? 0);
+    let timer = 0;
+
+    const select = (i: number) => {
+      active = i;
+      shots.forEach((s, j) => s.setAttribute('aria-pressed', String(j === i)));
+      if (count) count.textContent = String(i + 1);
+      if (capTitle) capTitle.textContent = `${shots[i].dataset.title}.`;
+      if (capText) capText.textContent = shots[i].dataset.caption ?? '';
+    };
+
+    shots.forEach((shot, i) => {
+      // A short delay so sweeping across the row doesn't flip through every shot.
+      shot.addEventListener('mouseenter', () => {
+        clearTimeout(timer);
+        timer = window.setTimeout(() => select(i), 150);
+      });
+      shot.addEventListener('mouseleave', () => clearTimeout(timer));
+      shot.addEventListener('focus', () => select(i));
+      shot.addEventListener('click', () => {
+        clearTimeout(timer);
+        select(i);
+      });
+    });
+
+    gallery.addEventListener('keydown', (event) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-shot]')) return;
+      let next = active;
+      if (event.key === 'ArrowRight') next = (active + 1) % shots.length;
+      else if (event.key === 'ArrowLeft') next = (active - 1 + shots.length) % shots.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = shots.length - 1;
+      else return;
+      event.preventDefault();
+      clearTimeout(timer);
+      select(next);
+      shots[next].focus();
+    });
+
+    // The first time the row comes into view, the next shot leans open for a
+    // moment to show that the row responds.
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches && shots.length > 1) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          observer.disconnect();
+          const peek = shots[(active + 1) % shots.length];
+          setTimeout(() => {
+            peek.classList.add('peek');
+            setTimeout(() => peek.classList.remove('peek'), 700);
+          }, 400);
+        },
+        { threshold: 0.6 },
+      );
+      observer.observe(gallery);
+    }
+  }
+</script>
+
+<style>
+  .gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 48px 0;
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .row {
+    display: flex;
+    gap: 8px;
+    height: 26rem;
+  }
+
+  .shot {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #050a0a;
+    box-shadow: 0 0 0 1px var(--line);
+    transition: flex-grow 0.6s cubic-bezier(0.3, 0.7, 0.2, 1);
+  }
+
+  .shot[aria-pressed='true'] {
+    flex-grow: 8;
+  }
+
+  .shot:global(.peek) {
+    flex-grow: 2.2;
+  }
+
+  .shot :global(.art) {
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.5s, filter 0.5s;
+  }
+
+  .shot :global(img.art),
+  .frame :global(img.art) {
+    object-fit: contain;
+    background: #171c20;
+  }
+
+  .shot[aria-pressed='false'] :global(.art) {
+    opacity: 0.3;
+    filter: grayscale(1);
+  }
+
+  .shot[aria-pressed='false'] :global(img.art) {
+    object-fit: cover;
+  }
+
+  .row:hover .shot[aria-pressed='false'] :global(.art) {
+    opacity: 0.45;
+  }
+
+  .row .shot[aria-pressed='false']:hover :global(.art) {
+    opacity: 0.7;
+  }
+
+  .active-label {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #f2f4ea;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .shot[aria-pressed='true'] .active-label {
+    opacity: 1;
+    transition-delay: 0.2s;
+  }
+
+  .bar {
+    width: 2px;
+    height: 14px;
+    background: var(--glow);
+    box-shadow: 0 0 8px var(--glow);
+  }
+
+  .sliver-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #f2f4ea;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+  }
+
+  .sliver-label span {
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    rotate: 180deg;
+  }
+
+  .shot[aria-pressed='true'] .sliver-label {
+    opacity: 0;
+  }
+
+  .caption,
+  figcaption {
+    font-size: 15px;
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+
+  .caption {
+    min-height: 3.1em;
+  }
+
+  .caption-title {
+    font-weight: 600;
+  }
+
+  .caption-text {
+    color: var(--muted);
+  }
+
+  .stack {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .head .count,
+    .row,
+    .caption {
+      display: none;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    figure {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .frame {
+      display: block;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+  }
+</style>

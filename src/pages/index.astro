@@ -1,0 +1,202 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+import Cited from '../components/Cited.astro';
+---
+
+<Base still>
+  <div class="sea">
+    <canvas class="canvas" aria-hidden="true" data-sea></canvas>
+
+    <div class="stats" aria-hidden="true">
+      <div data-stat="jellies"></div>
+      <div data-stat="glowing"></div>
+    </div>
+
+    <main class="hero">
+      <div class="hero-copy">
+        <blockquote class="quote" data-sea-avoid data-reveal>
+          {site.quote[0]}<br />{site.quote[1]}<span class="caret" aria-hidden="true"></span>
+        </blockquote>
+
+        <div class="intro" data-sea-avoid data-reveal data-reveal-delay="120">
+          <h1>{site.title}</h1>
+          <p class="role">{site.role} @ <Cited source="cpi">Charoen Pokphand Indonesia</Cited>.</p>
+          <p class="focus">{site.focus}</p>
+          <p class="background">Previously, mentor @ <Cited source="bncc">BNCC</Cited>. Computer Science @ <Cited source="binus">BINUS University</Cited>.</p>
+          <p class="building">Currently, building <Cited source="aether">Aether</Cited> — weather for the way there.</p>
+          {
+            site.socials.length > 0 && (
+              <p class="socials" data-sea-ignore>
+                {site.socials.map(({ label, href }, i) => (
+                  <span>
+                    {i > 0 && <span class="sep"> / </span>}
+                    <a class="ink-link" href={href} target="_blank" rel="noopener noreferrer">
+                      {label}
+                    </a>
+                  </span>
+                ))}
+              </p>
+            )
+          }
+        </div>
+      </div>
+    </main>
+  </div>
+</Base>
+
+<script>
+  import { Ocean } from '../scripts/ocean/ocean';
+
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-sea]');
+  const jellies = document.querySelector<HTMLElement>('[data-stat="jellies"]');
+  const glowing = document.querySelector<HTMLElement>('[data-stat="glowing"]');
+
+  if (canvas) {
+    const start = () => {
+      new Ocean(canvas, (stats) => {
+        if (jellies) jellies.textContent = String(stats.jellies);
+        if (glowing && glowing.textContent !== String(stats.glowing)) {
+          glowing.textContent = String(stats.glowing);
+          // Brighten the count for a moment whenever it changes.
+          if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            glowing.animate([{ opacity: 1 }, { opacity: 0.4 }], { duration: 600, easing: 'ease-out' });
+          }
+        }
+      });
+    };
+    // The glyphs are drawn in the page's monospace face, so wait for it.
+    document.fonts.load("600 12px 'Spline Sans Mono Variable'").finally(start);
+  }
+</script>
+
+<style>
+  .sea {
+    position: relative;
+    height: 100dvh;
+    width: 100%;
+    overflow: hidden;
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 30%, var(--deep) 100%);
+  }
+
+  .canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .stats {
+    position: absolute;
+    top: 32px;
+    right: var(--rail);
+    z-index: 10;
+    font-size: 11px;
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .stats div {
+    opacity: 0.32;
+  }
+
+  /* Small, unboxed copy leaves the ocean as the main visual. */
+  .hero {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: flex-end;
+    padding: 120px var(--rail) clamp(64px, 12vh, 160px);
+    pointer-events: none;
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(32px, 5vh, 56px);
+    max-width: 56rem;
+  }
+
+  .quote,
+  .intro {
+    pointer-events: auto;
+  }
+
+  .quote {
+    font-size: 14px;
+    line-height: 1.65;
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    opacity: 0.6;
+  }
+
+  h1 {
+    font-size: inherit;
+    font-weight: 400;
+    line-height: inherit;
+    letter-spacing: inherit;
+    text-wrap: balance;
+  }
+
+  .intro {
+    font-size: 15px;
+    line-height: max(24px, 3vh);
+    text-wrap: pretty;
+  }
+
+  .role,
+  .focus,
+  .background,
+  .building {
+    color: var(--fg);
+  }
+
+  .focus,
+  .background,
+  .building {
+    margin-top: 8px;
+  }
+
+  .socials {
+    margin-top: 16px;
+    font-size: 15px;
+  }
+
+  .socials a {
+    opacity: 0.6;
+  }
+
+  .socials a:hover,
+  .socials a:focus-visible {
+    opacity: 1;
+  }
+
+  .sep {
+    opacity: 0.4;
+  }
+
+  @media (max-height: 720px) {
+    .hero { padding-bottom: 48px; }
+    .hero-copy { gap: 28px; }
+  }
+
+  @media (max-width: 1023px) {
+    .hero { padding: 112px var(--gutter) max(8vh, env(safe-area-inset-bottom)); }
+    .hero-copy { gap: 32px; }
+    .quote { font-size: 13px; }
+    .intro { font-size: 14px; line-height: 1.75; }
+    .building { margin-top: 8px; }
+    .socials { font-size: 14px; }
+    .stats { top: 96px; }
+  }
+
+  @media (max-height: 480px) and (max-width: 1023px) {
+    .hero { padding-top: 88px; padding-bottom: 20px; }
+    .hero-copy { gap: 16px; }
+    .socials { margin-top: 8px; }
+  }
+</style>

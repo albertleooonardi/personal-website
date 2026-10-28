@@ -1,0 +1,44 @@
+<!-- Register before first render so document and history transitions agree. -->
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const sections = ['/', '/projects', '/blog'];
+    const clean = (path) => path.replace(/\/$/, '') || '/';
+    const direction = (from, to) => {
+      const a = clean(new URL(from, location.href).pathname);
+      const b = clean(new URL(to, location.href).pathname);
+      const group = (path) => sections.indexOf('/' + (path.split('/')[1] || ''));
+      if (group(a) === group(b)) return b.split('/').length < a.split('/').length ? 'back' : 'forward';
+      return group(b) < group(a) ? 'back' : 'forward';
+    };
+
+    addEventListener('pageswap', (event) => {
+      if (!event.viewTransition || !event.activation) return;
+      if (reduced()) return event.viewTransition.skipTransition();
+      const target = event.activation.entry.url;
+      const motion = direction(event.activation.from?.url || location.href, target);
+      root.dataset.pageMotion = motion;
+      try {
+        sessionStorage.setItem('portfolio-transition', JSON.stringify({ to: new URL(target).pathname, motion }));
+      } catch {}
+      const reset = () => delete root.dataset.pageMotion;
+      event.viewTransition.finished.then(reset, reset);
+    });
+
+    addEventListener('pagereveal', (event) => {
+      if (!event.viewTransition) return;
+      if (reduced()) return event.viewTransition.skipTransition();
+      const from = window.navigation?.activation?.from?.url;
+      let motion = from ? direction(from, location.href) : 'forward';
+      try {
+        const pending = JSON.parse(sessionStorage.getItem('portfolio-transition') || 'null');
+        if (!from && pending?.to === location.pathname) motion = pending.motion;
+        sessionStorage.removeItem('portfolio-transition');
+      } catch {}
+      root.dataset.pageMotion = motion;
+      const reset = () => delete root.dataset.pageMotion;
+      event.viewTransition.finished.then(reset, reset);
+    });
+  })();
+</script>

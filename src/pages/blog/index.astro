@@ -1,0 +1,174 @@
+---
+import Base from '../../layouts/Base.astro';
+import { site, sources } from '../../data/site';
+
+const journey = [
+  { ...sources.cpi, dates: '2025 — present', summary: 'From web and ML development to production AI: building automation, data pipelines, and real-time applications.' },
+  { ...sources.bncc, dates: '2024 — 2025', summary: 'Helped students learn back-end development and Java through Laravel, MySQL, object-oriented programming, and practical projects.' },
+  { ...sources.binus, dates: '2022 — 2026', summary: 'Bachelor’s degree in Computer Science. Also contributed to developer learning and research at UREEKA.' },
+];
+---
+
+<Base title="Blog" description="A little about Albert Leonardi: machine learning, building things, and the journey so far.">
+  <main class="biography">
+    <header class="intro" data-reveal>
+      <div class="introduction">
+        <p class="eyebrow"><span class="signal" aria-hidden="true"></span> blog / a little about me</p>
+        <h1>Albert<br /><em>Leonardi.</em></h1>
+        <p class="location">Machine Learning Engineer<br />Jakarta, Indonesia</p>
+        <p class="opening">A foundation in full-stack development.<br />A curiosity for what AI can make possible.</p>
+        <a class="ink-link profile-link" href={sources.cpi.href} target="_blank" rel="noopener noreferrer">find me on LinkedIn <span aria-hidden="true">↗</span></a>
+      </div>
+      <figure class="portrait">
+        <img src="/about/albert-portrait.webp" alt="Albert smiling on a balcony overlooking the city at night" width="960" height="1280" fetchpriority="high" decoding="async" />
+        <figcaption>Albert, beyond the screen.</figcaption>
+      </figure>
+    </header>
+
+    <section class="chapter story" aria-labelledby="story-title" data-reveal>
+      <h2 class="eyebrow" id="story-title">01 / the person behind the work</h2>
+      <div class="prose">
+        <p>I’m a machine learning engineer whose path started with building for the web. Today, I work on AI automation and the systems that help models become useful in everyday workflows.</p>
+        <p>At Charoen Pokphand Indonesia, that means connecting data, automating processes, and bringing machine learning into production. My interests span deep learning, LLM applications, and the full journey from an idea to a deployed system.</p>
+        <p>Along the way, teaching has been part of my story too—sharing back-end development and Java with students at BNCC, and learning alongside other developers at BINUS.</p>
+      </div>
+    </section>
+
+    <section class="chapter" aria-labelledby="journey-title" data-reveal>
+      <h2 class="eyebrow" id="journey-title">02 / the journey so far</h2>
+      <ol class="journey">
+        {journey.map((entry) => (
+          <li>
+            <span class="dates">{entry.dates}</span>
+            <div>
+              <h3>{entry.name}</h3>
+              <p class="role">{entry.role}</p>
+              <p class="summary">{entry.summary}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="milestone">A memorable milestone: first place in the Beginner Track of the 2024 Hedera Hello Future Hackathon, building Streamverse with my team.</p>
+    </section>
+
+    <section class="chapter moments" aria-labelledby="moments-title" data-reveal>
+      <h2 class="eyebrow" id="moments-title">03 / a few moments</h2>
+      <div class="photo-pair">
+        <figure>
+          <img src="/about/albert-golden-hour.webp" alt="Albert in sunglasses among sunlit rocks at golden hour" width="1200" height="1600" loading="lazy" decoding="async" />
+          <figcaption>01 / golden hour</figcaption>
+        </figure>
+        <figure>
+          <img src="/about/albert-mirror.webp" alt="Albert taking a mirror photo in a white shirt and red tie" width="960" height="1280" loading="lazy" decoding="async" />
+          <figcaption>02 / a little more formal</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <footer data-reveal>
+      <p>Still learning.<br /><em>Still building.</em></p>
+      <div class="footer-links">
+        {site.socials.map(({ label, href }) => <a class="ink-link" href={href} target="_blank" rel="noopener noreferrer">{label} <span aria-hidden="true">↗</span></a>)}
+      </div>
+      <small>Biography based on my <a class="ink-link" href={sources.cpi.href} target="_blank" rel="noopener noreferrer">LinkedIn profile</a>.</small>
+    </footer>
+  </main>
+</Base>
+
+<style>
+  .biography {
+    max-width: 1056px;
+    margin: 0 auto;
+    padding: 148px var(--gutter) 80px;
+  }
+
+  .intro {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    align-items: center;
+    gap: clamp(32px, 6vw, 88px);
+    padding-bottom: 100px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    line-height: 1.7;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+
+  .signal {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--glow);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--glow) 45%, transparent);
+    vertical-align: middle;
+  }
+
+  h1 {
+    margin: 30px 0 28px;
+    font-family: var(--font-serif);
+    font-size: clamp(64px, 7.5vw, 100px);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    font-weight: 400;
+  }
+
+  h1 em { color: var(--glow); }
+  .location { font-size: 12px; line-height: 1.9; color: var(--muted); }
+  .opening { margin: 28px 0 22px; font-family: var(--font-serif); font-size: 22px; line-height: 1.45; }
+  .profile-link { font-size: 11px; }
+
+  img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: 3px;
+    background: var(--deep);
+  }
+
+  .portrait img { box-shadow: 0 24px 64px rgb(0 0 0 / 0.25); }
+  figcaption { margin-top: 12px; font-size: 10px; color: var(--muted); }
+  .chapter { padding: 48px 0 64px; border-top: 1px solid var(--line); }
+  .chapter > h2 { margin-bottom: 36px; }
+  .prose { max-width: 720px; margin-left: auto; font-family: var(--font-serif); font-size: 25px; line-height: 1.5; }
+  .prose p + p { margin-top: 24px; color: var(--muted); }
+
+  .journey { list-style: none; margin: 0; padding: 0; }
+  .journey li { display: grid; grid-template-columns: 200px 1fr; gap: 40px; padding: 28px 0; }
+  .journey li + li { border-top: 1px solid var(--line); }
+  .dates { padding-top: 6px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  h3 { font-family: var(--font-serif); font-size: 28px; line-height: 1.2; }
+  .role { margin-top: 8px; font-size: 11px; color: var(--glow); }
+  .summary { max-width: 580px; margin-top: 14px; font-family: var(--font-serif); font-size: 19px; line-height: 1.5; color: var(--muted); }
+  .milestone { margin: 26px 0 0 240px; padding-left: 20px; border-left: 1px solid var(--glow); font-family: var(--font-serif); font-size: 19px; line-height: 1.5; color: var(--muted); }
+
+  .photo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+  .photo-pair figure:last-child { margin-top: 80px; }
+  footer { padding-top: 64px; border-top: 1px solid var(--line); }
+  footer > p { font-family: var(--font-serif); font-size: 46px; line-height: 1.1; }
+  footer em { color: var(--muted); }
+  .footer-links { display: flex; gap: 24px; margin-top: 28px; font-size: 12px; }
+  footer small { display: block; margin-top: 64px; font-size: 10px; color: var(--muted); }
+
+  @media (max-width: 700px) {
+    .biography { padding-top: 112px; padding-bottom: 40px; }
+    .intro { grid-template-columns: 1fr; gap: 40px; padding-bottom: 64px; }
+    h1 { font-size: clamp(64px, 16vw, 90px); }
+    .portrait { max-width: 440px; }
+    .chapter { padding: 32px 0 44px; }
+    .chapter > h2 { margin-bottom: 24px; }
+    .prose { font-size: 23px; }
+    .journey li { grid-template-columns: 1fr; gap: 12px; padding: 24px 0; }
+    h3 { font-size: 26px; }
+    .milestone { margin-left: 0; }
+    .photo-pair { gap: 24px; grid-template-columns: 1fr; }
+    .photo-pair figure:last-child { margin-top: 8px; }
+    footer { padding-top: 40px; }
+    footer > p { font-size: 40px; }
+  }
+</style>

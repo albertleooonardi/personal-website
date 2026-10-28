@@ -1,0 +1,236 @@
+---
+// An underlined name in the hero that opens a small card on hover or focus:
+// where, what, when. On touch screens it is a plain link.
+import { sources } from '../data/site';
+import { isExternal } from '../data/projects';
+
+interface Props {
+  source: keyof typeof sources;
+}
+
+const s = sources[Astro.props.source];
+const group = s.group?.map((key) => sources[key]).filter(Boolean);
+const href = group?.[0]?.href ?? s.href;
+const external = isExternal(href);
+const footer = group ? 'open a site' : external ? 'open site' : 'open page';
+---
+
+<span class="cited">
+  <a
+    class="ink-link trigger"
+    href={href}
+    target={external ? '_blank' : undefined}
+    rel={external ? 'noopener noreferrer' : undefined}
+    aria-label={`${s.name}, ${s.role}`}><slot /></a
+  >
+  <span class="card" aria-hidden="true" data-sea-ignore>
+    {
+      group ? (
+        <span class="rows">
+          {group.map((g) => (
+            <a class="row" href={g.href} target="_blank" rel="noopener noreferrer" tabindex="-1">
+              <span class="head">
+                <span class="icon">{g.icon ? <img src={g.icon} alt="" /> : g.name.charAt(0)}</span>
+                <span class="name">{g.name}</span>
+                <span class="dates">{g.dates}</span>
+              </span>
+              <span class="summary">{g.summary}</span>
+            </a>
+          ))}
+        </span>
+      ) : (
+        <a class="single" href={href} tabindex="-1" target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
+          <span class="head">
+            <span class="icon">{s.icon ? <img src={s.icon} alt="" /> : s.name.charAt(0)}</span>
+            <span class="name">{s.name}</span>
+            <span class="dates">{s.dates}</span>
+          </span>
+          <span class="role">{s.role}</span>
+          <span class="summary clamp">{s.summary}</span>
+        </a>
+      )
+    }
+    <span class="foot">
+      <span>{footer}</span>
+      <span aria-hidden="true">{external || group ? '↗' : '→'}</span>
+    </span>
+  </span>
+</span>
+
+<style>
+  .cited {
+    position: relative;
+    display: inline-block;
+  }
+
+  .card {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      width: 340px;
+      margin-bottom: 10px;
+      overflow: visible;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      color: var(--fg);
+      font-size: 12px;
+      line-height: 18px;
+      transform-origin: bottom left;
+      opacity: 0;
+      visibility: hidden;
+      translate: 0 4px;
+      scale: 0.98;
+      transition:
+        opacity 0.08s ease-in,
+        translate 0.08s ease-in,
+        scale 0.08s ease-in,
+        visibility 0s 0.08s;
+    }
+
+    /* Bridge the gap so moving onto the card keeps it open. */
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 100% 0 -12px;
+    }
+
+    .cited:hover .card,
+    .cited:focus-within .card {
+      opacity: 1;
+      visibility: visible;
+      translate: 0;
+      scale: 1;
+      transition:
+        opacity 0.12s ease-out 0.055s,
+        translate 0.12s ease-out 0.055s,
+        scale 0.12s ease-out 0.055s,
+        visibility 0s 0.055s;
+    }
+
+    .cited:hover .trigger,
+    .cited:focus-within .trigger {
+      text-decoration-color: currentColor;
+    }
+
+    :global(.cited-dismissed) .card {
+      visibility: hidden;
+      opacity: 0;
+    }
+  }
+
+  .single,
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none;
+  }
+
+  .single {
+    padding: 12px 14px;
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+  }
+
+  .row {
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.1s;
+  }
+
+  .row:hover {
+    background: color-mix(in srgb, var(--fg) 6%, transparent);
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1;
+  }
+
+  .icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--glow) 18%, transparent);
+    color: var(--glow);
+    font-size: 10px;
+  }
+
+  .icon img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0.6;
+  }
+
+  .dates {
+    flex-shrink: 0;
+    margin-left: auto;
+    padding-left: 8px;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.4;
+  }
+
+  .role {
+    margin-top: 4px;
+    font-size: 13px;
+  }
+
+  .summary {
+    opacity: 0.6;
+  }
+
+  .clamp {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .foot {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-top: 1px solid var(--line);
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0.45;
+  }
+</style>
+
+<script>
+  // Escape closes an open card until the pointer leaves it.
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const open = document.querySelector('.cited:hover, .cited:focus-within');
+    if (!open) return;
+    open.classList.add('cited-dismissed');
+    (document.activeElement as HTMLElement | null)?.blur();
+    open.addEventListener('pointerleave', () => open.classList.remove('cited-dismissed'), { once: true });
+  });
+</script>

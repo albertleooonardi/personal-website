@@ -1,0 +1,27 @@
+---
+// Renders a run of text with inline links, as used in project write-ups.
+import { isExternal, type Part } from '../data/projects';
+
+interface Props {
+  parts: Part[];
+}
+
+const { parts } = Astro.props;
+---
+
+{
+  parts.map((part) =>
+    typeof part === 'string' ? (
+      part
+    ) : (
+      <a
+        class="ink-link"
+        href={part.href}
+        target={isExternal(part.href) ? '_blank' : undefined}
+        rel={isExternal(part.href) ? 'noopener noreferrer' : undefined}
+      >
+        {part.text}
+      </a>
+    ),
+  )
+}

@@ -1,0 +1,266 @@
+---
+import Base from '../../layouts/Base.astro';
+import ComingSoon from '../../components/ComingSoon.astro';
+import NightArt from '../../components/NightArt.astro';
+import { isExternal, projectHref, projects } from '../../data/projects';
+---
+
+<Base title="Projects" description="Things I have built.">
+  {
+    projects.length === 0 ? (
+      <ComingSoon title="Projects" />
+    ) : (
+      <main class="projects">
+        <h1 class="sr-only">Projects</h1>
+        <div class="strip" data-strip tabindex="0" role="region" aria-label="Projects; use arrow keys to browse">
+          {projects.map((p, i) => {
+            const href = projectHref(p);
+            const external = href ? isExternal(href) : false;
+            return (
+              <article class="project" data-slug={p.slug} data-reveal data-reveal-delay={Math.min(i, 4) * 80}>
+                <a
+                  class="card"
+                  href={href}
+                  target={external ? '_blank' : undefined}
+                  rel={external ? 'noopener noreferrer' : undefined}
+                  aria-label={external ? `${p.name}, opens in a new tab` : p.name}
+                >
+                  <span class="thumb">
+                    <NightArt seed={p.art} src={p.thumb} alt={`${p.name} project preview`} label={p.name} eager={i < 2} />
+                    {href && <span class="chip">{external ? 'visit site ↗' : 'view project'}</span>}
+                  </span>
+                  <span class="meta">
+                    <span class="name">{p.name}</span>
+                    <span class="year">{p.year}</span>
+                  </span>
+                  <span class="tagline">{p.page?.tagline ?? p.description}</span>
+                  <span class="description">{p.description}</span>
+                </a>
+                {p.page && <a class="mobile-detail" href={href}>view project <span aria-hidden="true">→</span></a>}
+                {(p.link || p.repo) && (
+                  <p class="project-links">
+                    {p.link && (
+                      <a class="ink-link" href={p.link} target={isExternal(p.link) ? '_blank' : undefined} rel={isExternal(p.link) ? 'noopener noreferrer' : undefined}>
+                        live site ↗
+                      </a>
+                    )}
+                    {p.repo && (
+                      <a class="ink-link" href={p.repo} target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                    )}
+                  </p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </main>
+    )
+  }
+</Base>
+
+<script>
+  import '../../scripts/project-strip';
+</script>
+
+<style>
+  .card {
+    display: block;
+    text-decoration: none;
+    outline: none;
+  }
+
+  .thumb {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--kelp);
+  }
+
+  .thumb :global(.art) {
+    transition: scale 0.7s ease-out;
+  }
+
+  .card:hover .thumb :global(.art),
+  .card:focus-visible .thumb :global(.art) {
+    scale: 1.03;
+  }
+
+  .card:focus-visible .thumb {
+    outline: 2px solid var(--glow);
+    outline-offset: 3px;
+  }
+
+  .chip {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, #0e181a 55%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #f2f4ea;
+    font-size: 12px;
+    opacity: 0;
+    translate: 0 4px;
+    transition: opacity 0.2s, translate 0.2s;
+  }
+
+  .card:hover .chip,
+  .card:focus-visible .chip {
+    opacity: 1;
+    translate: 0;
+  }
+
+  .meta {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .name {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .year {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .tagline,
+  .description {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .project-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 14px;
+    font-size: 12px;
+  }
+
+  .mobile-detail { display: none; }
+
+  .strip:focus-visible {
+    outline: none;
+  }
+
+  .strip:focus-visible .thumb {
+    outline: 1px solid var(--glow);
+    outline-offset: -1px;
+  }
+
+  .strip:global(.dragging) {
+    cursor: grabbing;
+    user-select: none;
+  }
+
+  .strip:global(.dragging) .card { pointer-events: none; }
+
+  /* Desktop: one sideways strip, filling the height of the window. */
+  @media (min-width: 1024px) {
+    :global(html:has(.projects)),
+    :global(html:has(.projects) body) {
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .projects {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100dvh;
+      padding-top: 48px;
+    }
+
+    .strip {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 24px max(var(--gutter), calc((100vw - 56rem) / 2));
+      scrollbar-width: none;
+    }
+
+    .strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .project {
+      flex-shrink: 0;
+    }
+
+    .thumb {
+      height: min(62vh, 42rem);
+      aspect-ratio: 3 / 2;
+    }
+
+    .card {
+      width: min-content;
+    }
+
+    .description {
+      display: none;
+    }
+  }
+
+  /* Mobile: a column of cards with the full description. */
+  @media (max-width: 1023px) {
+    .strip {
+      display: flex;
+      flex-direction: column;
+      gap: 16vw;
+      padding: 112px var(--gutter) 12vh;
+    }
+
+    .thumb {
+      height: 65vw;
+      border-radius: 16px;
+    }
+
+    .chip {
+      opacity: 1;
+      translate: 0;
+    }
+
+    .name {
+      font-size: 21px;
+    }
+
+    .tagline {
+      display: none;
+    }
+
+    .description {
+      font-size: 17px;
+    }
+
+    .mobile-detail {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 20px;
+      padding: 7px 16px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--fg) 8%, transparent);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      text-decoration: none;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+
+    .mobile-detail:hover { background: color-mix(in srgb, var(--fg) 14%, transparent); }
+    .mobile-detail:active { transform: scale(0.96); }
+  }
+</style>

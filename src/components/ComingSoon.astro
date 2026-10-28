@@ -1,0 +1,25 @@
+---
+// The empty state shared by projects, gallery and blog until they have content.
+interface Props {
+  title: string;
+}
+---
+
+<main class="soon">
+  <h1 class="sr-only">{Astro.props.title}</h1>
+  <p>coming soon.<span class="caret" aria-hidden="true"></span></p>
+</main>
+
+<style>
+  .soon {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 160px var(--gutter);
+  }
+
+  p {
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    opacity: 0.6;
+  }
+</style>

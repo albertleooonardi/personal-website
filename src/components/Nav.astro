@@ -1,0 +1,315 @@
+---
+import { site } from '../data/site';
+
+const links = [
+  { label: 'ocean', href: '/' },
+  { label: 'projects', href: '/projects' },
+  { label: 'blog', href: '/blog' },
+];
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isCurrent = (href: string) =>
+  href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`);
+---
+
+<nav class="desktop" aria-label="Main" data-sea-avoid data-nav>
+  {
+    links.map(({ label, href }) => (
+      <a href={href} aria-current={isCurrent(href) ? 'page' : undefined}>
+        {label}
+      </a>
+    ))
+  }
+</nav>
+
+<div class="mobile" data-mobile-nav>
+  <button
+    type="button"
+    class="bar"
+    aria-expanded="false"
+    aria-controls="mobile-menu"
+    data-menu-toggle
+    data-sea-avoid
+  >
+    <span class="name">{site.name}</span>
+    <svg class="dots" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="4" cy="4" r="1.5"></circle>
+      <circle cx="12" cy="4" r="1.5"></circle>
+      <circle cx="4" cy="12" r="1.5"></circle>
+      <circle cx="12" cy="12" r="1.5"></circle>
+    </svg>
+    <svg class="close" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M3 3l10 10M13 3 3 13"></path>
+    </svg>
+    <span class="sr-only">Menu</span>
+  </button>
+
+  <div id="mobile-menu" class="menu" hidden>
+    <nav class="menu-links" aria-label="Main">
+      {
+        links.map(({ label, href }, i) => (
+          <a
+            href={href}
+            style={`--i: ${i}`}
+            aria-current={isCurrent(href) ? 'page' : undefined}
+          >
+            {label.charAt(0).toUpperCase() + label.slice(1)}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="menu-foot">
+      {
+        site.socials.map(({ label, href }) => (
+          <a href={href} target="_blank" rel="noopener noreferrer">
+            {label}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menu = document.getElementById('mobile-menu');
+  const content = document.getElementById('page-content');
+  const desktop = matchMedia('(min-width: 1024px)');
+  const mobile = toggle?.closest('[data-mobile-nav]');
+  const nav = document.querySelector('[data-nav]');
+  const updateScroll = () => nav?.classList.toggle('scrolled', window.scrollY > 24);
+  updateScroll();
+  window.addEventListener('scroll', updateScroll, { passive: true });
+
+  function setOpen(open: boolean, restoreFocus = false) {
+    if (!toggle || !menu) return;
+    toggle.setAttribute('aria-expanded', String(open));
+    menu.hidden = !open;
+    document.documentElement.classList.toggle('menu-open', open);
+    if (content) content.inert = open;
+    if (open) {
+      mobile?.setAttribute('role', 'dialog');
+      mobile?.setAttribute('aria-modal', 'true');
+      mobile?.setAttribute('aria-label', 'Navigation');
+    } else {
+      mobile?.removeAttribute('role');
+      mobile?.removeAttribute('aria-modal');
+      mobile?.removeAttribute('aria-label');
+    }
+    if (open) menu.querySelector<HTMLAnchorElement>('a')?.focus({ preventScroll: true });
+    else if (restoreFocus) toggle.focus({ preventScroll: true });
+  }
+
+  toggle?.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  menu?.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('a')) setOpen(false);
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') {
+      setOpen(false, true);
+    }
+    if (e.key === 'Tab' && toggle?.getAttribute('aria-expanded') === 'true' && menu) {
+      const items = [toggle, ...menu.querySelectorAll<HTMLElement>('a[href], button')];
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !items.includes(document.activeElement as HTMLElement))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+  desktop.addEventListener('change', () => { if (desktop.matches) setOpen(false); });
+  window.addEventListener('pageshow', () => setOpen(false));
+</script>
+
+<style>
+  /* Desktop: a quiet row of lowercase links, centred at the top. */
+  .desktop {
+    position: fixed;
+    top: 32px;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    font-size: 13px;
+    color: var(--fg);
+    transition: color 0.3s;
+    view-transition-name: site-nav;
+  }
+
+  .desktop:global(.over-cover) {
+    color: var(--on-cover);
+  }
+
+  .desktop::before {
+    content: '';
+    position: absolute;
+    inset: -12px -20px;
+    z-index: -1;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bg) 90%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  .desktop:global(.scrolled)::before { opacity: 1; }
+  .desktop:global(.over-cover)::before { opacity: 0; }
+
+  .desktop a {
+    opacity: 0.5;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+
+  .desktop a:active {
+    opacity: 0.75;
+    transform: translateY(1px);
+  }
+
+  .desktop a:hover,
+  .desktop a:focus-visible,
+  .desktop a[aria-current='page'] {
+    opacity: 1;
+  }
+
+  .mobile {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .desktop {
+      display: none;
+    }
+
+    .mobile {
+      display: block;
+    }
+
+    .bar {
+      position: fixed;
+      top: max(12px, 3vw);
+      left: max(12px, 3vw);
+      right: max(12px, 3vw);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--fg) 6%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-family: var(--font-serif);
+      font-size: 20px;
+      line-height: 1;
+      border: 1px solid var(--line);
+    }
+
+    .dots,
+    .close {
+      width: 18px;
+      height: 18px;
+      fill: color-mix(in srgb, var(--fg) 55%, transparent);
+      stroke: color-mix(in srgb, var(--fg) 55%, transparent);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      transition: rotate 0.18s, opacity 0.18s;
+    }
+
+    .close {
+      display: none;
+      fill: none;
+    }
+
+    .bar[aria-expanded='true'] .dots {
+      display: none;
+    }
+
+    .bar[aria-expanded='true'] .close {
+      display: block;
+    }
+
+    .menu {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      background: color-mix(in srgb, var(--bg) 96%, transparent);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      animation: menu-in 0.28s var(--ease-out);
+    }
+
+    .menu[hidden] {
+      display: none;
+    }
+
+    .menu-links {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5vh;
+    }
+
+    .menu-links a {
+      font-family: var(--font-serif);
+      font-weight: 500;
+      font-size: 14vw;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      animation: link-in 0.5s var(--ease-out) backwards;
+      animation-delay: calc(var(--i) * 55ms + 60ms);
+    }
+
+    .menu-links a[aria-current='page'] {
+      color: var(--glow);
+    }
+
+    .menu-foot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8vw;
+      padding-bottom: max(10vh, env(safe-area-inset-bottom));
+      font-size: 14px;
+      color: color-mix(in srgb, var(--fg) 45%, transparent);
+    }
+
+    .menu-foot a {
+      text-decoration: none;
+    }
+
+  }
+
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes link-in {
+    from {
+      opacity: 0;
+      translate: 0 24px;
+      filter: blur(4px);
+    }
+  }
+
+  :global(html.menu-open),
+  :global(html.menu-open body) {
+    overflow: hidden;
+  }
+</style>
